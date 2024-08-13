@@ -15,6 +15,7 @@ import {
   getDoc,
 } from 'firebase/firestore'
 
+
 // style
 const style = {
   position: 'absolute',
@@ -40,20 +41,11 @@ export default function Home() {
 
   const [itemName, setItemName] = useState(' ')
   const [itemNumber, setItemNumber] = useState(1)
-  const [searchName, setSearchName] = useState(' ')
+  const [searchName, setSearchName] = useState('')
 
 
-  // function for finding a specific item
-  const findInventory = async (item) => {
-    const docRef = doc(collection(firestore, 'pantry'), item)
-    const docSnap = await getDoc(docRef)
-    return true;
-  }
   
-  useEffect(() => {
-    updateInventory()
-  }, [])
-
+  
 
   // function for updating the inventory from the server
   const updateInventory = async () => {
@@ -61,14 +53,19 @@ export default function Home() {
     const docs = await getDocs(snapshot)
     const inventoryList = []
     docs.forEach((doc) => {
-      inventoryList.push({ name: doc.id, ...doc.data() })
+      // filter for search keyword
+      // if item name contains search word or search word is empty, add to list
+      if(doc.id.includes(searchName) || searchName.trim().length === 0 || !searchName || searchName === 0) 
+      {
+        inventoryList.push({ name: doc.id, ...doc.data() })
+      }
     })
     setInventory(inventoryList)
   }
   
   useEffect(() => {
     updateInventory()
-  }, [])
+  }, [searchName])
 
   // function for adding things into the database
   const addItem = async (item, amount) => {
@@ -115,19 +112,24 @@ export default function Home() {
       alignItems={'center'}
       gap={2}
     >
-
+    
     <Stack direction="row" spacing={2}>
         <TextField
           id="outlined-basic"
           label="item name"
           variant="outlined"
           fullWidth
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
+          value={searchName.toLowerCase()}
+          onChange={(e) => {
+            setSearchName(e.target.value)
+            updateInventory()
+            }}
         />
-          <Button variant="contained" onClick={findInventory(searchName)}>
-            Search
-          </Button>
+        {
+          // <Button variant="contained" onClick={findInventory(searchName)}>
+          //   Search
+          // </Button>
+        }
       </Stack>
 
       <Stack direction="row" spacing={2}>
